@@ -1,16 +1,21 @@
-{% import '{pyecoregen}templates/module_utilities.tpl' as ecore_modutil with context -%}
+{% import '{pyecoregen}module_utilities.tpl' as ecore_modutil with context -%}
 
 {%- macro generate_enum(e) %}
-{{ e.name }} = EEnum('{{ e.name }}', literals=[{{ e.eLiterals | map(attribute='name') | map('pyquotesingle') | join(', ') }}])
+{%- for c in element.eClassifiers if c is type(ecore.EEnum) -%}
+{% if c == e and loop.first %}
+
+EEnum.default_value = property(lambda self: None)
+{% endif -%}
+{% endfor -%}
+{{ ecore_modutil.generate_enum(e) }}
 {{ e.name }}.__name__ = '{{ e.name }}'
 {% endmacro %}
 
 {#- -------------------------------------------------------------------------------------------- -#}
 
 {%- macro generate_edatatype(e) %}
-{{ e.name }} = EDataType('{{ e.name }}', instanceClassName='{{ e.instanceClassName }}')
+{{ ecore_modutil.generate_edatatype(e) }}
 {{ e.name }}.__name__ = '{{ e.name }}'
-{{ e.name }}.default_value = property(lambda self: None)
 {% endmacro %}
 
 {#- -------------------------------------------------------------------------------------------- -#}
@@ -29,16 +34,15 @@
 {#- -------------------------------------------------------------------------------------------- -#}
 
 {%- macro generate_class(c) %}
-{% if not textX_isGenerated%}
-{% set textX_isGenerated = True %}
+{% if element.eClassifiers[0] == c %}
 class EObject(Ecore.EObject):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         for key, value in kwargs.items():
             if key not in self.__dict__:
-                continue
-            setattr(self, key, value)
+                setattr(self, key, value)
 {% endif %}
+
 {% if not user_module %}{% for d in c.eStructuralFeatures | selectattr('derived') | selectattr('many') %}
 {{ ecore_modutil.generate_derived_collection(d) }}
 {% endfor %}{% endif %}

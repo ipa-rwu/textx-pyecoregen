@@ -1,18 +1,22 @@
 import os
 import jinja2
-import pyecoregen
 
 from pyecoregen import ecore
 
 
-class FileLoader(jinja2.FileSystemLoader):
+class FileSystemLoader(jinja2.FileSystemLoader):
     ORIGINAL_TEMPLATE_PREFIX = '{pyecoregen}'
 
     def get_source(self, environment, template):
+        '''
+        pyecoregen and textx-pyecoregen use the same template names, to distinguish
+        them, a a prefix is used which cannot be resolved by a FilesystemLoader
+        
+        TODO a PrefixLoader might do the job
+        '''
         if  template.startswith(self.ORIGINAL_TEMPLATE_PREFIX):
             template = template.replace(self.ORIGINAL_TEMPLATE_PREFIX, '', 1)
-            pyecoregenDir = os.path.dirname(pyecoregen.__file__)
-            filename = os.path.abspath(os.path.join(pyecoregenDir, template))
+            filename = os.path.abspath(os.path.join(self.ecoregentemplates, template))
             f = open(filename, 'rb')
             try:
                 contents = f.read().decode(self.encoding)
@@ -27,5 +31,6 @@ class EcoreGenerator(ecore.EcoreGenerator):
     def create_environment(self, **kwargs):
         env = super().create_environment()
         textxTemplates = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'templates')
-        env.loader = FileLoader([textxTemplates, self.templates_path])
+        env.loader = FileSystemLoader([textxTemplates, self.templates_path])
+        env.loader.ecoregentemplates = self.templates_path
         return env
