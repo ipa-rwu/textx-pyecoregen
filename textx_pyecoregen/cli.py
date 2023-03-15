@@ -3,9 +3,12 @@ import argparse
 from pyecoregen import cli
 from .ecore import EcoreGenerator
 
+
 def generate_from_cli(args):
     """CLI entry point."""
-    parser = argparse.ArgumentParser(description="Generate Python classes from an Ecore model.")
+    parser = argparse.ArgumentParser(
+        description="Generate Python classes from an Ecore model.")
+
     parser.add_argument(
         '--ecore-model',
         '-e',
@@ -52,8 +55,10 @@ def generate_from_cli(args):
 
 cli.generate_from_cli = generate_from_cli
 
+
 def main():
     cli.main()
+
 
 if __name__ == '__main__':
     main()
